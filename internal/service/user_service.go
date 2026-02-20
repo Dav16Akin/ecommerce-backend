@@ -12,6 +12,7 @@ type UserService interface {
 	CreateUser(user *model.User) error
 	GetUser(id uint) (*model.User, error)
 	UpdateUser(user *model.User) error
+	DeleteUser(id uint) error
 }
 
 type userService struct {
@@ -55,4 +56,19 @@ func (s *userService) GetUser(id uint) (*model.User, error) {
 
 func (s *userService) UpdateUser(user *model.User) error {
 	return s.repo.UpdateUser(user)
+}
+
+
+var ErrUserNotFound = errors.New("user not found")
+func (s *userService) DeleteUser(id uint) error {
+	rows , err := s.repo.DeleteUser(id)
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrUserNotFound
+	}
+
+	return nil
 }
