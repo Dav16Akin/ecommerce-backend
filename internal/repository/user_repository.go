@@ -8,7 +8,8 @@ import (
 type UserRepository interface {
 	GetByID(id uint) (*model.User, error)
 	CreateUser(user *model.User) error
-	UpdateUser(user *model.User)  error
+	UpdateUser(user *model.User) error
+	DeleteUser(id uint) (int64, error)
 }
 
 type userRepository struct {
@@ -36,4 +37,9 @@ func (r *userRepository) CreateUser(user *model.User) error {
 
 func (r *userRepository) UpdateUser(user *model.User) error {
 	return r.db.Save(user).Error
+}
+
+func (r *userRepository) DeleteUser(id uint) (int64, error) {
+	result := r.db.Delete(&model.User{}, id)
+	return result.RowsAffected, result.Error
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ type UserHandler interface {
 	GetUser(c *gin.Context)
 	CreateUser(c *gin.Context)
 	UpdateUser(c *gin.Context)
+	DeleteUser(c *gin.Context)
 }
 
 type userHandler struct {
@@ -70,7 +72,7 @@ func (h *userHandler) GetUser(c *gin.Context) {
 
 	user, err := h.service.GetUser(uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -129,4 +131,25 @@ func (h *userHandler) UpdateUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (h *userHandler) DeleteUser(c *gin.Context) {
+	params := c.Param("id")
+	id, err := strconv.Atoi(params)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+
+	err = h.service.DeleteUser(uint(id))
+	if err != nil {
+		if errors.Is(err, service.ErrUserNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

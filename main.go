@@ -50,6 +50,7 @@ func main() {
 			users.GET("/:id", app.UserHandler.GetUser)
 			users.POST("/", app.UserHandler.CreateUser)
 			users.PATCH("/:id", app.UserHandler.UpdateUser)
+			users.DELETE("/:id", app.UserHandler.DeleteUser)
 		}
 	}
 
