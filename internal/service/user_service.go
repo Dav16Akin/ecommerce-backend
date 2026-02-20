@@ -11,6 +11,7 @@ import (
 type UserService interface {
 	CreateUser(user *model.User) error
 	GetUser(id uint) (*model.User, error)
+	UpdateUser(user *model.User) error
 }
 
 type userService struct {
@@ -50,4 +51,8 @@ func (s *userService) CreateUser(user *model.User) error {
 
 func (s *userService) GetUser(id uint) (*model.User, error) {
 	return s.repo.GetByID(id)
+}
+
+func (s *userService) UpdateUser(user *model.User) error {
+	return s.repo.UpdateUser(user)
 }
