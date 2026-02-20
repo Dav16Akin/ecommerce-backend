@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	model "github.com/Dav16Akin/ecommerce-rest-backend/internal/models"
@@ -12,6 +13,7 @@ import (
 type UserHandler interface {
 	GetUser(c *gin.Context)
 	CreateUser(c *gin.Context)
+	UpdateUser(c *gin.Context)
 }
 
 type userHandler struct {
@@ -58,11 +60,73 @@ func (h *userHandler) CreateUser(c *gin.Context) {
 }
 
 func (h *userHandler) GetUser(c *gin.Context) {
-	user, err := h.service.GetUser(1)
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+
+	user, err := h.service.GetUser(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
 		return
 	}
 
-	c.JSON(200, user)
+	resp := model.UserResponse{
+		ID:          user.ID,
+		Name:        user.Name,
+		Email:       user.Email,
+		PhoneNumber: user.PhoneNumber,
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *userHandler) UpdateUser(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+
+	existingUser, err := h.service.GetUser(uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	var req model.UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Name != nil {
+		existingUser.Name = *req.Name
+	}
+
+	if req.Email != nil {
+		existingUser.Email = *req.Email
+	}
+
+	if req.PhoneNumber != nil {
+		existingUser.PhoneNumber = *req.PhoneNumber
+	}
+
+	if err := h.service.UpdateUser(existingUser); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp := model.UserResponse{
+		ID:          existingUser.ID,
+		Name:        existingUser.Name,
+		Email:       existingUser.Email,
+		PhoneNumber: existingUser.PhoneNumber,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

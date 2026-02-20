@@ -18,6 +18,12 @@ type CreateUserRequest struct {
 	PhoneNumber string `json:"phone_number" binding:"required"`
 }
 
+type UpdateUserRequest struct {
+	Name        *string `json:"name" binding:"omitempty"`
+	Email       *string `json:"email" binding:"omitempty"`
+	PhoneNumber *string `json:"phone_number" binding:"omitempty"`
+}
+
 type UserResponse struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`

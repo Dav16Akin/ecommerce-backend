@@ -23,7 +23,6 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-
 	db, err := database.ConnectToDB()
 	if err != nil {
 		panic(err)
@@ -43,7 +42,16 @@ func main() {
 
 	router := gin.Default()
 
-	router.GET("/v1/user", app.UserHandler.GetUser)
+	api := router.Group("/v1")
+
+	{
+		users := api.Group("/user")
+		{
+			users.GET("/:id", app.UserHandler.GetUser)
+			users.POST("/", app.UserHandler.CreateUser)
+			users.PATCH("/:id", app.UserHandler.UpdateUser)
+		}
+	}
 
 	router.Run(":8000")
 
