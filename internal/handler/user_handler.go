@@ -16,6 +16,7 @@ type UserHandler interface {
 	CreateUser(c *gin.Context)
 	UpdateUser(c *gin.Context)
 	DeleteUser(c *gin.Context)
+	UpdatePassword(c *gin.Context)
 }
 
 type userHandler struct {
@@ -152,4 +153,33 @@ func (h *userHandler) DeleteUser(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *userHandler) UpdatePassword(c *gin.Context) {
+	params := c.Param("id")
+	id, err := strconv.Atoi(params)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var req model.UpdatePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.UpdatePassword(uint(id), req.OldPassword, req.NewPassword); err != nil {
+		switch err {
+		case service.ErrUserNotFound:
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		case service.ErrInvalidPassword:
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid current password"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

@@ -24,6 +24,11 @@ type UpdateUserRequest struct {
 	PhoneNumber *string `json:"phone_number" binding:"omitempty"`
 }
 
+type UpdatePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
+
 type UserResponse struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
