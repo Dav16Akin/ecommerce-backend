@@ -51,6 +51,7 @@ func main() {
 			users.POST("/", app.UserHandler.CreateUser)
 			users.PATCH("/:id", app.UserHandler.UpdateUser)
 			users.DELETE("/:id", app.UserHandler.DeleteUser)
+			users.PATCH("/:id/password", app.UserHandler.UpdatePassword)
 		}
 	}
 

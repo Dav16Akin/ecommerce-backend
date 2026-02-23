@@ -13,6 +13,7 @@ type UserService interface {
 	GetUser(id uint) (*model.User, error)
 	UpdateUser(user *model.User) error
 	DeleteUser(id uint) error
+	UpdatePassword(id uint, oldPassword string, newPassword string) error
 }
 
 type userService struct {
@@ -22,6 +23,9 @@ type userService struct {
 func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{repo: repo}
 }
+
+var ErrUserNotFound = errors.New("user not found")
+var ErrInvalidPassword = errors.New("invalid password")
 
 func (s *userService) CreateUser(user *model.User) error {
 	if user.Email == "" {
@@ -58,10 +62,8 @@ func (s *userService) UpdateUser(user *model.User) error {
 	return s.repo.UpdateUser(user)
 }
 
-
-var ErrUserNotFound = errors.New("user not found")
 func (s *userService) DeleteUser(id uint) error {
-	rows , err := s.repo.DeleteUser(id)
+	rows, err := s.repo.DeleteUser(id)
 	if err != nil {
 		return err
 	}
@@ -71,4 +73,26 @@ func (s *userService) DeleteUser(id uint) error {
 	}
 
 	return nil
+}
+
+func (s *userService) UpdatePassword(id uint, oldPassword string, newPassword string) error {
+	user, err := s.repo.GetByID(id)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// Compare old password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword))
+	if err != nil {
+		return ErrInvalidPassword
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(hashed)
+
+	return s.repo.UpdateUser(user)
 }
